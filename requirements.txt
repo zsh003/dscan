@@ -1,0 +1,10 @@
+Django==5.0.3
+djangorestframework==3.14.0
+django-cors-headers==4.3.1
+python-nmap==0.7.1
+requests==2.31.0
+beautifulsoup4==4.12.3
+sqlmap==1.9.4
+python-dotenv==1.0.1
+celery==5.3.6
+redis==5.0.1 
