@@ -1,5 +1,8 @@
 <template>
-  <el-container class="app-container">
+  <div v-if="$route.path === '/login'">
+    <router-view></router-view>
+  </div>
+  <el-container v-else class="app-container">
     <el-aside width="200px">
       <el-menu
         :router="true"
@@ -24,9 +27,12 @@
     
     <el-container>
       <el-header>
-        <h2>DScan 漏洞扫描系统</h2>
+        <div class="header-content">
+          DScan 漏洞扫描系统
+          <el-button type="danger" @click="handleLogout">退出登录</el-button>
+        </div>
       </el-header>
-      
+
       <el-main>
         <router-view></router-view>
       </el-main>
@@ -36,6 +42,9 @@
 
 <script>
 import { Aim, List, Warning } from '@element-plus/icons-vue'
+import { useStore } from 'vuex'
+import { useRouter } from 'vue-router'
+import { ElMessage } from 'element-plus'
 
 export default {
   name: 'App',
@@ -43,6 +52,20 @@ export default {
     Aim,
     List,
     Warning
+  },
+  setup() {
+    const store = useStore()
+    const router = useRouter()
+
+    const handleLogout = () => {
+      store.dispatch('logout')
+      ElMessage.success('已退出登录')
+      router.push('/login')
+    }
+
+    return {
+      handleLogout
+    }
   }
 }
 </script>
@@ -61,6 +84,12 @@ export default {
   color: #333;
   line-height: 60px;
   border-bottom: 1px solid #ddd;
+}
+
+.header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .el-menu-vertical {

@@ -48,9 +48,25 @@ npm install
 python manage.py migrate
 ```
 
-6. 启动开发服务器：
+6. 生成SSL证书
+
+```bash
+cd certificate
+openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout localhost.key -out localhost.crt
+```
+
+7. 启动开发服务器：
 - 后端：`python manage.py runserver`
+- 后端SSL启动：`python manage.py runserver_plus --cert-file ./certificate/localhost.crt --key-file ./certificate/localhost.key`
+- Redis启动：`celery -A backend worker -l info`
 - 前端：`cd frontend && npm run serve`
+
+8. 访问系统
+- 前端界面：https://localhost:8080
+- 后端API：https://localhost:8000/api/
+- 管理界面：https://localhost:8000/admin/
+  
+账号密码：admin/123456
 
 ## 使用说明
 

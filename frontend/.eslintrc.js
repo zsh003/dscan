@@ -9,6 +9,5 @@ module.exports = {
         'plugin:vue/vue3-recommended'
     ],
     rules: {
-        // 可在此添加自定义规则
     }
 }
