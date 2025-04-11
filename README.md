@@ -17,7 +17,6 @@ DScan是一个基于Django和React的Web应用漏洞扫描可视化展示系统�
 - 后端：Django + Django REST framework
 - 前端：React + Ant Design
 - 数据库：SQLite
-- 任务队列：Celery + Redis
 
 ## 安装说明
 
@@ -49,6 +48,7 @@ python manage.py makemigrations
 python manage.py migrate
 python manage.py makemigrations scan
 python manage.py migrate scan
+python manage.py generate_test_users
 python manage.py generate_test_data
 ```
 
@@ -62,11 +62,10 @@ openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout localhost.key -out l
 7. 启动开发服务器：
 - 后端：`python manage.py runserver`
 - 后端SSL启动：`python manage.py runserver_plus --cert-file ./certificate/localhost.crt --key-file ./certificate/localhost.key`
-- Redis启动：`celery -A backend worker -l info`
 - 前端：`cd frontend && npm run serve`
 
-8. 访问系统
-- 前端界面：https://localhost:8080
+1. 访问系统
+- 前端界面：https://localhost:3000
 - 后端API：https://localhost:8000/api/
 - 管理界面：https://localhost:8000/admin/
   
@@ -74,7 +73,7 @@ openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout localhost.key -out l
 
 ## 使用说明
 
-访问 http://localhost:8080 即可使用Web界面进行扫描操作。
+访问 https://localhost:3000 即可使用Web界面进行扫描操作。
 
 ## 注意事项
 

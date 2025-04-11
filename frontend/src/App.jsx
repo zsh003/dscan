@@ -81,7 +81,7 @@ const AppContent = () => {
         boxShadow: '0 1px 4px rgba(0,21,41,.08)',
         zIndex: 1,
       }}>
-        <Title level={3} style={{ margin: 0 }}>DScan - Web应用漏洞扫描系统</Title>
+        <Title level={3} style={{ margin: 0 }}>DScan - 基于Django的Web应用漏洞扫描系统</Title>
         <Dropdown overlay={userMenu} placement="bottomRight">
           <Space style={{ cursor: 'pointer' }}>
             <Avatar icon={<UserOutlined />} />

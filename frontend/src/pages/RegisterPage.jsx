@@ -13,7 +13,7 @@ const RegisterPage = () => {
   const onFinish = async (values) => {
     setLoading(true);
     try {
-      await axios.post('http://localhost:8000/api/users/register/', values);
+      await axios.post('https://localhost:8000/api/users/register/', values);
       message.success('注册成功，请登录');
       navigate('/login');
     } catch (error) {
