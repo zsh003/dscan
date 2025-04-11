@@ -29,7 +29,7 @@ const DashboardPage = () => {
     try {
       // 获取所有任务
       const response = await scanApi.getAllTasks();
-      const tasks = response.results || [];
+      const tasks = response || [];
 
       // 统计任务状态
       const taskStatusStats = tasks.reduce((acc, task) => {

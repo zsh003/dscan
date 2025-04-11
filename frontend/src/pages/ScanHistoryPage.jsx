@@ -15,7 +15,7 @@ const ScanHistoryPage = () => {
   const fetchData = async () => {
     try {
       const response = await scanApi.getAllTasks();
-      setData(response.results || []);
+      setData(response || []);
     } catch (error) {
       console.error('获取扫描历史失败:', error);
     } finally {

@@ -1,6 +1,6 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import { authApi } from '../services/api';
 
 const AuthContext = createContext(null);
 
@@ -17,13 +17,12 @@ export const AuthProvider = ({ children }) => {
     const token = localStorage.getItem('token');
     if (token) {
       try {
-        const response = await axios.get('/api/users/profile/', {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        setUser(response.data);
+        const userData = await authApi.getProfile();
+        setUser(userData);
       } catch (error) {
         console.error('认证检查失败:', error);
         localStorage.removeItem('token');
+        localStorage.removeItem('refresh_token');
         setUser(null);
       }
     }
@@ -32,16 +31,11 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (username, password) => {
     try {
-      const response = await axios.post('/api/token/', { username, password });
-      const { access, refresh } = response.data;
+      const data = await authApi.login(username, password);
+      const { access, refresh, user: userData } = data;
       localStorage.setItem('token', access);
       localStorage.setItem('refresh_token', refresh);
-      
-      // 获取用户信息
-      const userResponse = await axios.get('/api/users/profile/', {
-        headers: { Authorization: `Bearer ${access}` }
-      });
-      setUser(userResponse.data);
+      setUser(userData);
       navigate('/');
       return true;
     } catch (error) {
@@ -52,11 +46,9 @@ export const AuthProvider = ({ children }) => {
 
   const logout = async () => {
     try {
-      const token = localStorage.getItem('token');
-      if (token) {
-        await axios.post('/api/users/logout/', null, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+      const refreshToken = localStorage.getItem('refresh_token');
+      if (refreshToken) {
+        await authApi.logout(refreshToken);
       }
     } catch (error) {
       console.error('登出请求失败:', error);
@@ -70,11 +62,8 @@ export const AuthProvider = ({ children }) => {
 
   const updateProfile = async (data) => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await axios.patch('/api/users/profile/', data, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setUser(response.data);
+      const updatedUser = await authApi.updateProfile(data);
+      setUser(updatedUser);
       return true;
     } catch (error) {
       console.error('更新个人信息失败:', error);
