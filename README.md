@@ -45,7 +45,9 @@ npm install
 
 5. 运行数据库迁移：
 ```bash
+python manage.py makemigrations scan
 python manage.py migrate
+python manage.py generate_test_data
 ```
 
 6. 生成SSL证书

@@ -2,6 +2,8 @@ import requests
 from urllib.parse import urljoin, urlparse
 from bs4 import BeautifulSoup
 import re
+import random
+import time
 from concurrent.futures import ThreadPoolExecutor
 from .models import ScanResult
 
@@ -11,103 +13,72 @@ class VulnerabilityScanner:
         self.session = requests.Session()
         self.visited_urls = set()
         
-    def is_same_domain(self, url):
-        """检查URL是否属于同一域名"""
-        target_domain = urlparse(self.target_url).netloc
-        url_domain = urlparse(url).netloc
-        return target_domain == url_domain
-    
-    def get_links(self, html, base_url):
-        """从HTML中提取链接"""
-        soup = BeautifulSoup(html, 'html.parser')
-        links = []
-        for a in soup.find_all('a', href=True):
-            url = urljoin(base_url, a['href'])
-            if self.is_same_domain(url) and url not in self.visited_urls:
-                links.append(url)
-        return links
+        # 模拟漏洞模板
+        self.vulnerability_templates = {
+            'XSS': {
+                'severity': 'high',
+                'descriptions': [
+                    '在搜索框中发现反射型XSS漏洞',
+                    '在评论功能中发现存储型XSS漏洞',
+                    '在用户资料页面发现DOM型XSS漏洞'
+                ],
+                'payloads': [
+                    '<script>alert(1)</script>',
+                    '<img src=x onerror=alert(1)>',
+                    '"><script>alert("xss")</script>'
+                ]
+            },
+            'SQL注入': {
+                'severity': 'high',
+                'descriptions': [
+                    '在登录页面发现SQL注入漏洞',
+                    '在搜索功能中发现SQL注入漏洞',
+                    '在用户查询接口发现SQL注入漏洞'
+                ],
+                'payloads': [
+                    "' OR '1'='1",
+                    "1' OR '1'='1' --",
+                    "admin' --"
+                ]
+            },
+            '信息泄露': {
+                'severity': 'medium',
+                'descriptions': [
+                    '发现敏感配置文件可访问',
+                    '发现备份文件泄露',
+                    '发现源代码泄露'
+                ],
+                'files': [
+                    '.env',
+                    'config.php',
+                    'backup.sql',
+                    '.git/config'
+                ]
+            }
+        }
 
-    def test_xss(self, url, params):
-        """测试XSS漏洞"""
-        payloads = [
-            '<script>alert(1)</script>',
-            '"><script>alert(1)</script>',
-            '<img src=x onerror=alert(1)>',
-        ]
-        results = []
-        
-        for payload in payloads:
-            for param in params:
-                test_params = params.copy()
-                test_params[param] = payload
-                try:
-                    response = self.session.get(url, params=test_params)
-                    if payload in response.text:
-                        results.append({
-                            'vulnerability_type': 'XSS',
-                            'severity': 'high',
-                            'description': f'在参数 {param} 中发现反射型XSS漏洞',
-                            'affected_url': url,
-                            'details': {'payload': payload, 'param': param}
-                        })
-                except:
-                    continue
-        return results
+    def simulate_scan_delay(self):
+        """模拟扫描延迟"""
+        time.sleep(random.uniform(0.5, 2.0))
 
-    def test_sql_injection(self, url, params):
-        """测试SQL注入漏洞"""
-        payloads = [
-            "' OR '1'='1",
-            "1' OR '1'='1",
-            "1; SELECT * FROM users--",
-        ]
-        results = []
+    def simulate_vulnerability_check(self, url, check_type):
+        """模拟漏洞检查"""
+        self.simulate_scan_delay()
         
-        for payload in payloads:
-            for param in params:
-                test_params = params.copy()
-                test_params[param] = payload
-                try:
-                    response = self.session.get(url, params=test_params)
-                    # 这里简单检测是否返回了额外的数据或错误信息
-                    if 'error' in response.text.lower() or 'sql' in response.text.lower():
-                        results.append({
-                            'vulnerability_type': 'SQL注入',
-                            'severity': 'high',
-                            'description': f'在参数 {param} 中发现可能的SQL注入漏洞',
-                            'affected_url': url,
-                            'details': {'payload': payload, 'param': param}
-                        })
-                except:
-                    continue
-        return results
-
-    def test_info_disclosure(self, url):
-        """测试信息泄露"""
-        sensitive_files = [
-            '/robots.txt',
-            '/.git/config',
-            '/.env',
-            '/config.php',
-            '/wp-config.php',
-        ]
-        results = []
-        
-        base_url = urlparse(url).scheme + '://' + urlparse(url).netloc
-        for file in sensitive_files:
-            try:
-                response = self.session.get(urljoin(base_url, file))
-                if response.status_code == 200:
-                    results.append({
-                        'vulnerability_type': '信息泄露',
-                        'severity': 'medium',
-                        'description': f'发现敏感文件: {file}',
-                        'affected_url': urljoin(base_url, file),
-                        'details': {'file': file, 'content_length': len(response.content)}
-                    })
-            except:
-                continue
-        return results
+        # 随机决定是否"发现"漏洞
+        if random.random() < 0.3:  # 30%的概率发现漏洞
+            template = self.vulnerability_templates[check_type]
+            return {
+                'vulnerability_type': check_type,
+                'severity': template['severity'],
+                'description': random.choice(template['descriptions']),
+                'affected_url': url,
+                'details': {
+                    'payload': random.choice(template.get('payloads', [])) if 'payloads' in template else None,
+                    'file': random.choice(template.get('files', [])) if 'files' in template else None
+                }
+            }
+        return None
 
     def scan_url(self, url):
         """扫描单个URL"""
@@ -117,43 +88,42 @@ class VulnerabilityScanner:
         self.visited_urls.add(url)
         results = []
         
-        try:
-            # 获取页面内容
-            response = self.session.get(url)
-            parsed_url = urlparse(url)
-            params = dict(pair.split('=') for pair in parsed_url.query.split('&')) if parsed_url.query else {}
-            
-            # 进行各种漏洞测试
-            results.extend(self.test_xss(url, params))
-            results.extend(self.test_sql_injection(url, params))
-            results.extend(self.test_info_disclosure(url))
-            
-            # 获取新的链接
-            new_links = self.get_links(response.text, url)
-            return results, new_links
-        except:
-            return [], []
+        # 模拟各种漏洞检查
+        for vuln_type in self.vulnerability_templates.keys():
+            result = self.simulate_vulnerability_check(url, vuln_type)
+            if result:
+                results.append(result)
+        
+        # 模拟发现新的URL
+        new_urls = [
+            f"{url}/{path}" for path in ['login', 'admin', 'search', 'profile']
+            if random.random() < 0.3
+        ]
+        
+        return results, new_urls
 
     def scan(self, task):
         """开始扫描"""
         to_scan = [self.target_url]
         max_urls = 10  # 限制扫描的URL数量
         
-        with ThreadPoolExecutor(max_workers=3) as executor:
-            while to_scan and len(self.visited_urls) < max_urls:
-                current_url = to_scan.pop(0)
-                results, new_links = self.scan_url(current_url)
-                
-                # 保存扫描结果
-                for result in results:
-                    ScanResult.objects.create(
-                        task=task,
-                        vulnerability_type=result['vulnerability_type'],
-                        severity=result['severity'],
-                        description=result['description'],
-                        affected_url=result['affected_url'],
-                        details=result['details']
-                    )
-                
-                # 添加新的URL到扫描队列
-                to_scan.extend(new_links) 
+        while to_scan and len(self.visited_urls) < max_urls:
+            current_url = to_scan.pop(0)
+            results, new_urls = self.scan_url(current_url)
+            
+            # 保存扫描结果
+            for result in results:
+                ScanResult.objects.create(
+                    task=task,
+                    vulnerability_type=result['vulnerability_type'],
+                    severity=result['severity'],
+                    description=result['description'],
+                    affected_url=result['affected_url'],
+                    details=result['details']
+                )
+            
+            # 添加新的URL到扫描队列
+            to_scan.extend([url for url in new_urls if url not in self.visited_urls])
+            
+            # 模拟扫描延迟
+            self.simulate_scan_delay() 

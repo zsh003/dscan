@@ -9,7 +9,19 @@
   align-items: center;
 }
 
-.header h1 {
+.logo {
+  margin-right: 24px;
+  min-width: 200px;
+}
+
+.logo h1 {
   margin: 0;
-  font-size: 20px;
+  font-size: 18px;
+  line-height: 64px;
+  white-space: nowrap;
+}
+
+.ant-menu {
+  line-height: 64px;
+  border-bottom: none;
 } 

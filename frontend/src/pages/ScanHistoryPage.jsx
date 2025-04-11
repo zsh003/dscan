@@ -1,15 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Table, Tag, Card, Button, Modal, Spin } from 'antd';
+import { Table, Tag, Card, Button } from 'antd';
+import { useNavigate } from 'react-router-dom';
 import { scanApi } from '../services/api';
-import ScanResults from '../components/ScanResults';
 
 const ScanHistoryPage = () => {
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [selectedTask, setSelectedTask] = useState(null);
-  const [results, setResults] = useState([]);
-  const [modalVisible, setModalVisible] = useState(false);
-  const [resultsLoading, setResultsLoading] = useState(false);
+  const navigate = useNavigate();
 
   // 获取所有任务
   const fetchTasks = async () => {
@@ -21,20 +18,6 @@ const ScanHistoryPage = () => {
       console.error('获取任务历史失败:', error);
     } finally {
       setLoading(false);
-    }
-  };
-
-  // 获取特定任务的扫描结果
-  const fetchTaskResults = async (taskId) => {
-    setResultsLoading(true);
-    try {
-      const response = await scanApi.getResults(taskId);
-      setResults(response);
-      setModalVisible(true);
-    } catch (error) {
-      console.error('获取扫描结果失败:', error);
-    } finally {
-      setResultsLoading(false);
     }
   };
 
@@ -95,12 +78,9 @@ const ScanHistoryPage = () => {
       render: (_, record) => (
         <Button 
           type="link" 
-          onClick={() => {
-            setSelectedTask(record);
-            fetchTaskResults(record.id);
-          }}
+          onClick={() => navigate(`/scan/${record.id}`)}
         >
-          查看结果
+          查看详情
         </Button>
       ),
     },
@@ -116,24 +96,8 @@ const ScanHistoryPage = () => {
           loading={loading}
         />
       </Card>
-
-      <Modal
-        title={`扫描结果 - ${selectedTask?.target_url}`}
-        open={modalVisible}
-        onCancel={() => setModalVisible(false)}
-        width={1200}
-        footer={null}
-      >
-        {resultsLoading ? (
-          <div style={{ textAlign: 'center', padding: '20px' }}>
-            <Spin size="large" />
-          </div>
-        ) : (
-          <ScanResults results={results} />
-        )}
-      </Modal>
     </div>
   );
 };
 
-export default ScanHistoryPage; 
+export default ScanHistoryPage;
