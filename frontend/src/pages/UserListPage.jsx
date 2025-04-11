@@ -96,13 +96,6 @@ const UserListPage = () => {
         <Space>
           <Button 
             type="link" 
-            icon={<EditOutlined />}
-            disabled={record.is_superuser || record.id === currentUser.id}
-          >
-            编辑
-          </Button>
-          <Button 
-            type="link" 
             danger 
             icon={<DeleteOutlined />}
             disabled={record.is_superuser || record.id === currentUser.id}

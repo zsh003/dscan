@@ -4,7 +4,7 @@ from .models import ScanTask, ScanResult, User
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['id', 'username', 'email', 'phone', 'department', 'position', 'last_login', 'last_login_ip']
+        fields = ['id', 'username','is_superuser', 'email', 'phone', 'department', 'position', 'last_login', 'last_login_ip']
         read_only_fields = ['last_login', 'last_login_ip']
 
 class UserUpdateSerializer(serializers.ModelSerializer):
@@ -28,6 +28,27 @@ class UserUpdateSerializer(serializers.ModelSerializer):
             instance.set_password(validated_data.pop('new_password'))
         
         return super().update(instance, validated_data)
+
+class UserRegisterSerializer(serializers.ModelSerializer):
+    password = serializers.CharField(write_only=True, required=True, style={'input_type': 'password'})
+    
+    class Meta:
+        model = User
+        fields = ['id', 'username', 'email', 'password', 'phone']
+        extra_kwargs = {
+            'password': {'write_only': True},
+            'email': {'required': True}
+        }
+
+    def create(self, validated_data):
+        # 使用Django的create_user方法创建用户
+        user = User.objects.create_user(
+            username=validated_data['username'],
+            email=validated_data['email'],
+            password=validated_data['password'],
+            phone=validated_data.get('phone', ''),
+        )
+        return user
 
 class ScanResultSerializer(serializers.ModelSerializer):
     class Meta:
