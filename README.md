@@ -1,6 +1,6 @@
-# DScan - Web应用漏洞扫描系统
+# DScan - Web应用漏洞扫描可视化展示系统
 
-DScan是一个基于Django和Vue的Web应用漏洞扫描系统，提供多种安全扫描功能。
+DScan是一个基于Django和React的Web应用漏洞扫描可视化展示系统，提供多种安全扫描功能和结果展示方案。
 
 ## 功能特性
 
@@ -15,8 +15,8 @@ DScan是一个基于Django和Vue的Web应用漏洞扫描系统，提供多种安
 ## 技术栈
 
 - 后端：Django + Django REST framework
-- 前端：Vue.js
-- 数据库：SQLite（可配置为MySQL或PostgreSQL）
+- 前端：React + Ant Design
+- 数据库：SQLite
 - 任务队列：Celery + Redis
 
 ## 安装说明
@@ -29,7 +29,7 @@ cd dscan
 
 2. 安装后端依赖：
 ```bash
-python -m venv venv
+python -m venv .venv
 source venv/bin/activate  # Windows使用: .\venv\Scripts\activate
 pip install -r requirements.txt
 ```
