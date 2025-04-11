@@ -45,8 +45,10 @@ npm install
 
 5. 运行数据库迁移：
 ```bash
-python manage.py makemigrations scan
+python manage.py makemigrations
 python manage.py migrate
+python manage.py makemigrations scan
+python manage.py migrate scan
 python manage.py generate_test_data
 ```
 
