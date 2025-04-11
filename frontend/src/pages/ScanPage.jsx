@@ -47,12 +47,10 @@ const ScanPage = () => {
   };
 
   return (
-    <Layout>
       <Content style={{ padding: '24px', maxWidth: 1200, margin: '0 auto' }}>
         <ScanForm onSubmit={handleSubmit} loading={loading} />
         {results.length > 0 && <ScanResults results={results} />}
       </Content>
-    </Layout>
   );
 };
 
