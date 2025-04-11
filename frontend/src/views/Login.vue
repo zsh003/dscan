@@ -2,7 +2,9 @@
   <div class="login-container">
     <el-card class="login-card">
       <template #header>
-        <h2>登录 DScan</h2>
+        <div class="card-header">
+          <h2>登录</h2>
+        </div>
       </template>
       
       <el-form :model="loginForm" @submit.prevent="handleLogin">
@@ -10,27 +12,20 @@
           <el-input
             v-model="loginForm.username"
             placeholder="用户名"
-            prefix-icon="User"
+            prefix-icon="el-icon-user"
           />
         </el-form-item>
-        
         <el-form-item>
           <el-input
             v-model="loginForm.password"
             type="password"
             placeholder="密码"
-            prefix-icon="Lock"
+            prefix-icon="el-icon-lock"
             show-password
           />
         </el-form-item>
-        
         <el-form-item>
-          <el-button
-            type="primary"
-            :loading="loading"
-            @click="handleLogin"
-            style="width: 100%"
-          >
+          <el-button type="primary" @click="handleLogin" style="width: 100%">
             登录
           </el-button>
         </el-form-item>
@@ -42,47 +37,31 @@
 <script>
 /* eslint-disable */
 import { ref } from 'vue'
-import { useStore } from 'vuex'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import { User, Lock } from '@element-plus/icons-vue'
+import { api } from '../config/api'
 
 export default {
   name: 'Login',
-  components: {
-    User,
-    Lock
-  },
   setup() {
-    const store = useStore()
     const router = useRouter()
-    const loading = ref(false)
     const loginForm = ref({
       username: '',
       password: ''
     })
 
     const handleLogin = async () => {
-      if (!loginForm.value.username || !loginForm.value.password) {
-        ElMessage.warning('请输入用户名和密码')
-        return
-      }
-
-      loading.value = true
       try {
-        await store.dispatch('login', loginForm.value)
+        await api.login(loginForm.value.username, loginForm.value.password)
         ElMessage.success('登录成功')
-        router.push('/')
+        router.push('/targets')
       } catch (error) {
         ElMessage.error('登录失败：用户名或密码错误')
-      } finally {
-        loading.value = false
       }
     }
 
     return {
       loginForm,
-      loading,
       handleLogin
     }
   }
@@ -91,10 +70,10 @@ export default {
 
 <style scoped>
 .login-container {
-  height: 100vh;
   display: flex;
   justify-content: center;
   align-items: center;
+  height: 100vh;
   background-color: #f5f7fa;
 }
 
@@ -102,7 +81,12 @@ export default {
   width: 400px;
 }
 
-.login-card :deep(.el-card__header) {
+.card-header {
   text-align: center;
+}
+
+.card-header h2 {
+  margin: 0;
+  color: #303133;
 }
 </style> 

@@ -1,8 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import store from '../store'
 import Login from '../views/Login.vue'
 import TargetList from '../views/TargetList.vue'
-import TaskList from '../views/TaskList.vue'
+import ScanTaskList from '../views/ScanTaskList.vue'
 import VulnerabilityList from '../views/VulnerabilityList.vue'
 
 const routes = [
@@ -14,8 +13,7 @@ const routes = [
   },
   {
     path: '/',
-    redirect: '/targets',
-    meta: { requiresAuth: true }
+    redirect: '/targets'
   },
   {
     path: '/targets',
@@ -26,7 +24,7 @@ const routes = [
   {
     path: '/tasks',
     name: 'Tasks',
-    component: TaskList,
+    component: ScanTaskList,
     meta: { requiresAuth: true }
   },
   {
@@ -38,17 +36,17 @@ const routes = [
 ]
 
 const router = createRouter({
-  history: createWebHistory(process.env.BASE_URL),
+  history: createWebHistory(),
   routes
 })
 
+// 路由守卫
 router.beforeEach((to, from, next) => {
-  const requiresAuth = to.matched.some(record => record.meta.requiresAuth)
-  const isAuthenticated = store.getters.isAuthenticated
-
-  if (requiresAuth && !isAuthenticated) {
+  const token = localStorage.getItem('token')
+  
+  if (to.meta.requiresAuth && !token) {
     next('/login')
-  } else if (to.path === '/login' && isAuthenticated) {
+  } else if (to.path === '/login' && token) {
     next('/')
   } else {
     next()

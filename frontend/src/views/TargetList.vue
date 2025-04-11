@@ -54,7 +54,7 @@
 <script>
 import { ref, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import api from '../config/api'
+import { api } from '../config/api'
 
 export default {
   name: 'TargetList',
@@ -70,60 +70,34 @@ export default {
     // 获取目标列表
     const fetchTargets = async () => {
       try {
-        const response = await fetch(api.targets)
-        targets.value = await response.json()
+        targets.value = await api.getTargets()
       } catch (error) {
-        ElMessage.error('获取目标列表失败')
+        ElMessage.error(error.message)
       }
-    }
-
-    // 显示添加对话框
-    const showAddDialog = () => {
-      dialogVisible.value = true
     }
 
     // 添加新目标
     const addTarget = async () => {
       try {
-        const response = await fetch(api.targets, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(newTarget.value)
-        })
-        if (response.ok) {
-          ElMessage.success('添加目标成功')
-          dialogVisible.value = false
-          fetchTargets()
-        } else {
-          ElMessage.error('添加目标失败')
-        }
+        await api.addTarget(newTarget.value)
+        ElMessage.success('添加目标成功')
+        dialogVisible.value = false
+        await fetchTargets()
       } catch (error) {
-        ElMessage.error('添加目标失败')
+        ElMessage.error(error.message)
       }
     }
 
     // 开始扫描
     const startScan = async (target) => {
       try {
-        const response = await fetch(api.scanTasks, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            target: target.id,
-            name: `扫描任务 - ${target.name}`
-          })
+        await api.createScanTask({
+          target: target.id,
+          name: `扫描任务 - ${target.name}`
         })
-        if (response.ok) {
-          ElMessage.success('扫描任务已启动')
-        } else {
-          ElMessage.error('启动扫描任务失败')
-        }
+        ElMessage.success('扫描任务已启动')
       } catch (error) {
-        ElMessage.error('启动扫描任务失败')
+        ElMessage.error(error.message)
       }
     }
 
@@ -136,18 +110,12 @@ export default {
           type: 'warning'
         })
         
-        const response = await fetch(`${api.targets}${target.id}/`, {
-          method: 'DELETE'
-        })
-        if (response.ok) {
-          ElMessage.success('删除目标成功')
-          fetchTargets()
-        } else {
-          ElMessage.error('删除目标失败')
-        }
+        await api.deleteTarget(target.id)
+        ElMessage.success('删除目标成功')
+        await fetchTargets()
       } catch (error) {
         if (error !== 'cancel') {
-          ElMessage.error('删除目标失败')
+          ElMessage.error(error.message)
         }
       }
     }
@@ -160,7 +128,7 @@ export default {
       targets,
       dialogVisible,
       newTarget,
-      showAddDialog,
+      showAddDialog: () => dialogVisible.value = true,
       addTarget,
       startScan,
       deleteTarget
