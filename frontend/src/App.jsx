@@ -90,7 +90,6 @@ const AppContent = () => {
               </Header>
               <Layout>
                 <Sider collapsible collapsed={collapsed} onCollapse={setCollapsed}>
-                  <div className="logo" style={{ height: '32px', margin: '16px', background: 'rgba(255, 255, 255, 0.2)' }} />
                   <Menu theme="dark" defaultSelectedKeys={['1']} mode="inline">
                     <Menu.Item key="1" icon={<DashboardOutlined />}>
                       <Link to="/">仪表盘</Link>

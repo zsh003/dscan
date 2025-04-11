@@ -24,6 +24,7 @@ class ScanTask(models.Model):
         ('failed', '失败')
     ]
     
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='scan_tasks', verbose_name='创建用户')
     target_url = models.URLField(verbose_name='目标URL')
     scan_type = models.CharField(max_length=50, verbose_name='扫描类型')
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending', verbose_name='状态')

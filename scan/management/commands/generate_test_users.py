@@ -51,8 +51,8 @@ class Command(BaseCommand):
             }
         ]
 
-        # 生成20个随机用户
-        for i in range(1, 21):
+        # 生成8个随机用户
+        for i in range(1, 9):
             username = f'user{i}'
             email = f'user{i}@dscan.com'
             department = random.choice(departments)

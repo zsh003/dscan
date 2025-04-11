@@ -130,6 +130,21 @@ export const authApi = {
   register: async (userData) => {
     const response = await api.post('/users/register/', userData);
     return response.data;
+  },
+
+  // 用户管理相关API
+  getAllUsers: async () => {
+    const response = await api.get('/users/');
+    return response.data;
+  },
+
+  deleteUser: async (userId) => {
+    return await api.delete(`/users/${userId}/`);
+  },
+
+  updateUser: async (userId, data) => {
+    const response = await api.patch(`/users/${userId}/`, data);
+    return response.data;
   }
 };
 

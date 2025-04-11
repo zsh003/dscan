@@ -3,11 +3,16 @@ from django.utils import timezone
 from scan.models import ScanTask, ScanResult
 import random
 from datetime import timedelta
+from django.contrib.auth import get_user_model
 
 class Command(BaseCommand):
     help = '生成测试数据用于开发和演示'
 
     def handle(self, *args, **options):
+        User = get_user_model()
+        # 获取所有用户
+        all_users = list(User.objects.all())
+
         # 清除现有数据
         ScanTask.objects.all().delete()
         ScanResult.objects.all().delete()
@@ -23,7 +28,12 @@ class Command(BaseCommand):
             'http://test.vulnerability.com',
             'http://security.example.org',
             'http://pentest.local',
-            'http://hackme.test'
+            'http://hackme.test',
+            'http://hack_me.test',
+            'http://hack_black.test',
+            'http://white_hat.test',
+            'http://red_hat.test',
+            'http://test.com'
         ]
 
         # 漏洞类型和描述模板
@@ -154,6 +164,7 @@ class Command(BaseCommand):
                 status = 'completed' if random.random() < 0.9 else 'failed'
                 
                 task = ScanTask.objects.create(
+                    user=random.choice(all_users),
                     target_url=url,
                     scan_type=random.choice(scan_types),
                     status=status,

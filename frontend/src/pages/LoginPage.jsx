@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { Form, Input, Button, Card, message, Typography } from 'antd';
+import { Form, Input, Button, Card, message, Typography, Space } from 'antd';
 import { UserOutlined, LockOutlined } from '@ant-design/icons';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 
 const { Title } = Typography;
@@ -64,15 +65,14 @@ const LoginPage = () => {
           </Form.Item>
 
           <Form.Item>
-            <Button 
-              type="primary" 
-              htmlType="submit" 
-              loading={loading}
-              style={{ width: '100%' }}
-              size="large"
-            >
-              登录
-            </Button>
+            <Space direction="vertical" style={{ width: '100%' }}>
+              <Button type="primary" htmlType="submit" loading={loading} block size="large">
+                登录
+              </Button>
+              <div style={{ textAlign: 'center' }}>
+                还没有账号？ <Link to="/register">立即注册</Link>
+              </div>
+            </Space>
           </Form.Item>
         </Form>
       </Card>

@@ -38,9 +38,16 @@ class UserViewSet(viewsets.ModelViewSet):
     serializer_class = UserSerializer
     permission_classes = [IsAuthenticated]
 
+    def get_queryset(self):
+        if not self.request.user.is_superuser:
+            return User.objects.filter(id=self.request.user.id)
+        return User.objects.all()
+
     def get_permissions(self):
         if self.action in ['create', 'register']:
             return [permissions.AllowAny()]
+        elif self.action in ['list', 'retrieve', 'update', 'partial_update', 'destroy']:
+            return [permissions.IsAuthenticated()]
         return [permissions.IsAuthenticated()]
 
     def get_serializer_class(self):
@@ -92,6 +99,15 @@ class UserViewSet(viewsets.ModelViewSet):
 class ScanTaskViewSet(viewsets.ModelViewSet):
     queryset = ScanTask.objects.all()
     serializer_class = ScanTaskSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        if self.request.user.is_superuser:
+            return ScanTask.objects.all()
+        return ScanTask.objects.filter(user=self.request.user)
+
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
 
     def perform_scan(self, task):
         """执行扫描任务"""
