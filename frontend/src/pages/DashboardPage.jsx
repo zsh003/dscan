@@ -1,70 +1,67 @@
 import React, { useState, useEffect } from 'react';
 import { Card, Row, Col, Statistic, Table, Tag } from 'antd';
-import { PieChart, Pie, BarChart, Bar, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer, LineChart, Line } from 'recharts';
+import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
 import { scanApi } from '../services/api';
 
 const DashboardPage = () => {
   const [loading, setLoading] = useState(true);
-  const [statistics, setStatistics] = useState({
-    totalScans: 0,
-    completedScans: 0,
-    failedScans: 0,
-    vulnerabilities: {
-      total: 0,
+  const [dashboardData, setDashboardData] = useState({
+    totalTasks: 0,
+    recentTasks: [],
+    vulnerabilityStats: {
       high: 0,
       medium: 0,
       low: 0
+    },
+    taskStatusStats: {
+      pending: 0,
+      running: 0,
+      completed: 0,
+      failed: 0
     }
   });
-  const [vulnerabilityTrends, setVulnerabilityTrends] = useState([]);
-  const [vulnerabilityTypes, setVulnerabilityTypes] = useState([]);
-  const [recentScans, setRecentScans] = useState([]);
 
   useEffect(() => {
     fetchDashboardData();
   }, []);
 
   const fetchDashboardData = async () => {
-    setLoading(true);
     try {
-      const tasks = await scanApi.getAllTasks();
-      const results = await scanApi.getAllResults();
-      
-      // 处理统计数据
-      const stats = {
-        totalScans: tasks.results.length,
-        completedScans: tasks.results.filter(t => t.status === 'completed').length,
-        failedScans: tasks.results.filter(t => t.status === 'failed').length,
-        vulnerabilities: {
-          total: results.length,
-          high: results.filter(r => r.severity === 'high').length,
-          medium: results.filter(r => r.severity === 'medium').length,
-          low: results.filter(r => r.severity === 'low').length
-        }
-      };
-      setStatistics(stats);
+      // 获取所有任务
+      const response = await scanApi.getAllTasks();
+      const tasks = response.results || [];
 
-      // 处理漏洞类型分布
-      const typeCount = {};
-      results.forEach(result => {
-        typeCount[result.vulnerability_type] = (typeCount[result.vulnerability_type] || 0) + 1;
+      // 统计任务状态
+      const taskStatusStats = tasks.reduce((acc, task) => {
+        acc[task.status] = (acc[task.status] || 0) + 1;
+        return acc;
+      }, {});
+
+      // 获取最近5个任务的详细信息和漏洞统计
+      const recentTasks = tasks.slice(0, 5);
+      const vulnerabilityStats = { high: 0, medium: 0, low: 0 };
+
+      // 获取每个任务的漏洞信息
+      const taskDetailsPromises = recentTasks.map(task => 
+        scanApi.getResults(task.id)
+      );
+      const taskResults = await Promise.all(taskDetailsPromises);
+
+      // 统计漏洞数量
+      taskResults.forEach(results => {
+        results.forEach(vuln => {
+          if (vuln.severity === 'high') vulnerabilityStats.high++;
+          else if (vuln.severity === 'medium') vulnerabilityStats.medium++;
+          else if (vuln.severity === 'low') vulnerabilityStats.low++;
+        });
       });
-      setVulnerabilityTypes(Object.entries(typeCount).map(([name, value]) => ({ name, value })));
 
-      // 处理最近扫描
-      setRecentScans(tasks.results.slice(0, 5));
-
-      // 处理趋势数据（按日期分组）
-      const trends = {};
-      results.forEach(result => {
-        const date = new Date(result.discovered_at).toLocaleDateString();
-        if (!trends[date]) {
-          trends[date] = { date, high: 0, medium: 0, low: 0 };
-        }
-        trends[date][result.severity]++;
+      setDashboardData({
+        totalTasks: tasks.length,
+        recentTasks: recentTasks,
+        vulnerabilityStats,
+        taskStatusStats
       });
-      setVulnerabilityTrends(Object.values(trends));
-
     } catch (error) {
       console.error('获取仪表盘数据失败:', error);
     } finally {
@@ -72,7 +69,20 @@ const DashboardPage = () => {
     }
   };
 
-  const recentScansColumns = [
+  const vulnerabilityData = [
+    { name: '高危漏洞', value: dashboardData.vulnerabilityStats.high, color: '#ff4d4f' },
+    { name: '中危漏洞', value: dashboardData.vulnerabilityStats.medium, color: '#faad14' },
+    { name: '低危漏洞', value: dashboardData.vulnerabilityStats.low, color: '#52c41a' },
+  ];
+
+  const taskStatusData = [
+    { name: '等待中', value: dashboardData.taskStatusStats.pending || 0, color: '#d9d9d9' },
+    { name: '扫描中', value: dashboardData.taskStatusStats.running || 0, color: '#1890ff' },
+    { name: '已完成', value: dashboardData.taskStatusStats.completed || 0, color: '#52c41a' },
+    { name: '失败', value: dashboardData.taskStatusStats.failed || 0, color: '#ff4d4f' },
+  ];
+
+  const columns = [
     {
       title: '目标URL',
       dataIndex: 'target_url',
@@ -84,90 +94,85 @@ const DashboardPage = () => {
       key: 'status',
       render: (status) => {
         const statusMap = {
-          'completed': { color: 'success', text: '已完成' },
-          'failed': { color: 'error', text: '失败' },
+          'pending': { color: 'default', text: '等待中' },
           'running': { color: 'processing', text: '扫描中' },
-          'pending': { color: 'default', text: '等待中' }
+          'completed': { color: 'success', text: '已完成' },
+          'failed': { color: 'error', text: '失败' }
         };
         const { color, text } = statusMap[status] || { color: 'default', text: status };
         return <Tag color={color}>{text}</Tag>;
-      }
+      },
     },
     {
-      title: '完成时间',
-      dataIndex: 'completed_at',
-      key: 'completed_at',
-      render: (time) => time ? new Date(time).toLocaleString() : '-'
-    }
+      title: '创建时间',
+      dataIndex: 'created_at',
+      key: 'created_at',
+      render: (time) => new Date(time).toLocaleString(),
+    },
   ];
 
   return (
     <div style={{ padding: '24px' }}>
-      {/* 统计卡片 */}
-      <Row gutter={16} style={{ marginBottom: 24 }}>
+      <h2>系统概览</h2>
+      
+      <Row gutter={[16, 16]}>
         <Col span={6}>
           <Card>
-            <Statistic title="总扫描任务" value={statistics.totalScans} />
-          </Card>
-        </Col>
-        <Col span={6}>
-          <Card>
-            <Statistic 
-              title="已完成扫描" 
-              value={statistics.completedScans}
-              suffix={`/ ${statistics.totalScans}`} 
+            <Statistic
+              title="总任务数"
+              value={dashboardData.totalTasks}
+              loading={loading}
             />
           </Card>
         </Col>
         <Col span={6}>
           <Card>
-            <Statistic 
-              title="发现漏洞总数" 
-              value={statistics.vulnerabilities.total} 
+            <Statistic
+              title="高危漏洞"
+              value={dashboardData.vulnerabilityStats.high}
+              valueStyle={{ color: '#ff4d4f' }}
+              loading={loading}
             />
           </Card>
         </Col>
         <Col span={6}>
           <Card>
-            <Statistic 
-              title="高危漏洞" 
-              value={statistics.vulnerabilities.high}
-              valueStyle={{ color: '#cf1322' }}
+            <Statistic
+              title="中危漏洞"
+              value={dashboardData.vulnerabilityStats.medium}
+              valueStyle={{ color: '#faad14' }}
+              loading={loading}
+            />
+          </Card>
+        </Col>
+        <Col span={6}>
+          <Card>
+            <Statistic
+              title="低危漏洞"
+              value={dashboardData.vulnerabilityStats.low}
+              valueStyle={{ color: '#52c41a' }}
+              loading={loading}
             />
           </Card>
         </Col>
       </Row>
 
-      {/* 图表区域 */}
-      <Row gutter={16} style={{ marginBottom: 24 }}>
+      <Row gutter={[16, 16]} style={{ marginTop: '16px' }}>
         <Col span={12}>
-          <Card title="漏洞趋势">
-            <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={vulnerabilityTrends}>
-                <XAxis dataKey="date" />
-                <YAxis />
-                <Tooltip />
-                <Legend />
-                <Line type="monotone" dataKey="high" stroke="#cf1322" name="高危" />
-                <Line type="monotone" dataKey="medium" stroke="#faad14" name="中危" />
-                <Line type="monotone" dataKey="low" stroke="#52c41a" name="低危" />
-              </LineChart>
-            </ResponsiveContainer>
-          </Card>
-        </Col>
-        <Col span={12}>
-          <Card title="漏洞类型分布">
+          <Card title="漏洞分布">
             <ResponsiveContainer width="100%" height={300}>
               <PieChart>
                 <Pie
-                  data={vulnerabilityTypes}
+                  data={vulnerabilityData}
                   dataKey="value"
                   nameKey="name"
                   cx="50%"
                   cy="50%"
                   outerRadius={80}
-                  label
                 >
+                  {vulnerabilityData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.color} />
+                  ))}
                 </Pie>
                 <Tooltip />
                 <Legend />
@@ -175,14 +180,31 @@ const DashboardPage = () => {
             </ResponsiveContainer>
           </Card>
         </Col>
+        <Col span={12}>
+          <Card title="任务状态分布">
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={taskStatusData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="name" />
+                <YAxis />
+                <Tooltip />
+                <Bar dataKey="value" fill="#8884d8">
+                  {taskStatusData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.color} />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </Card>
+        </Col>
       </Row>
 
-      {/* 最近扫描 */}
-      <Card title="最近扫描任务" style={{ marginBottom: 24 }}>
+      <Card title="最近扫描任务" style={{ marginTop: '16px' }}>
         <Table
-          columns={recentScansColumns}
-          dataSource={recentScans}
+          columns={columns}
+          dataSource={dashboardData.recentTasks}
           rowKey="id"
+          loading={loading}
           pagination={false}
         />
       </Card>
