@@ -60,7 +60,6 @@ openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout localhost.key -out l
 ```
 
 7. 启动开发服务器：
-- 后端：`python manage.py runserver`
 - 后端SSL启动：`python manage.py runserver_plus --cert-file ./certificate/localhost.crt --key-file ./certificate/localhost.key`
 - 前端：`cd frontend && npm run serve`
 
