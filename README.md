@@ -61,21 +61,12 @@ openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout localhost.key -out l
 
 7. 启动开发服务器：
 - 后端SSL启动：`python manage.py runserver_plus --cert-file ./certificate/localhost.crt --key-file ./certificate/localhost.key`
-- 前端：`cd frontend && npm run serve`
+- 前端：`cd frontend && npm start`
 
 1. 访问系统
 - 前端界面：https://localhost:3000
 - 后端API：https://localhost:8000/api/
 - 管理界面：https://localhost:8000/admin/
   
+
 账号密码：admin/123456
-
-## 使用说明
-
-访问 https://localhost:3000 即可使用Web界面进行扫描操作。
-
-## 注意事项
-
-- 请确保在合法授权的情况下使用本工具
-- 建议在测试环境中使用
-- 部分扫描功能可能需要root/管理员权限 
